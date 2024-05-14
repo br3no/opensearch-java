@@ -34,23 +34,27 @@ package org.opensearch.client.opensearch._types.analysis;
 
 import jakarta.json.stream.JsonGenerator;
 import java.util.function.Function;
+import javax.annotation.Nullable;
+import org.opensearch.client.json.JsonData;
 import org.opensearch.client.json.JsonEnum;
 import org.opensearch.client.json.JsonpDeserializable;
 import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.JsonpUtils;
 import org.opensearch.client.json.ObjectBuilderDeserializer;
 import org.opensearch.client.json.ObjectDeserializer;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 import org.opensearch.client.util.TaggedUnionUtils;
 
 // typedef: _types.analysis.TokenFilterDefinition
 
 @JsonpDeserializable
-public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.Kind, TokenFilterDefinitionVariant>, JsonpSerializable {
+public class TokenFilterDefinition implements OpenTaggedUnion<TokenFilterDefinition.Kind, Object>, JsonpSerializable {
 
     /**
      * {@link TokenFilterDefinition} variant kinds.
@@ -158,6 +162,8 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
 
         SmartcnStop("smartcn_stop"),
 
+        _Custom(null)
+
         ;
 
         private final String jsonValue;
@@ -173,7 +179,7 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
     }
 
     private final Kind _kind;
-    private final TokenFilterDefinitionVariant _value;
+    private final Object _value;
 
     @Override
     public final Kind _kind() {
@@ -181,7 +187,7 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
     }
 
     @Override
-    public final TokenFilterDefinitionVariant _get() {
+    public final Object _get() {
         return _value;
     }
 
@@ -189,6 +195,7 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
 
         this._kind = ApiTypeHelper.requireNonNull(value._tokenFilterDefinitionKind(), this, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(value, this, "<variant value>");
+        this._customKind = null;
 
     }
 
@@ -196,11 +203,22 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
 
         this._kind = ApiTypeHelper.requireNonNull(builder._kind, builder, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(builder._value, builder, "<variant value>");
+        this._customKind = builder._customKind;
 
     }
 
     public static TokenFilterDefinition of(Function<Builder, ObjectBuilder<TokenFilterDefinition>> fn) {
         return fn.apply(new Builder()).build();
+    }
+
+    /**
+     * Build a custom plugin-defined {@code TokenFilterDefinition}, given its kind
+     * and some JSON data
+     */
+    public TokenFilterDefinition(String kind, JsonData value) {
+        this._kind = Kind._Custom;
+        this._value = value;
+        this._customKind = kind;
     }
 
     /**
@@ -1032,6 +1050,37 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
         return TaggedUnionUtils.get(this, Kind.WordDelimiter);
     }
 
+    @Nullable
+    private final String _customKind;
+
+    /**
+     * Is this a custom {@code TokenFilterDefinition} defined by a plugin?
+     */
+    public boolean _isCustom() {
+        return _kind == Kind._Custom;
+    }
+
+    /**
+     * Get the actual kind when {@code _kind()} equals {@link Kind#_Custom}
+     * (plugin-defined variant).
+     */
+    @Nullable
+    public final String _customKind() {
+        return _customKind;
+    }
+
+    /**
+     * Get the custom plugin-defined variant value.
+     *
+     * @throws IllegalStateException
+     *             if the current variant is not {@link Kind#_Custom}.
+     */
+    public JsonData _custom() {
+        return TaggedUnionUtils.get(this, Kind._Custom);
+    }
+
+
+
     @Override
     public void serialize(JsonGenerator generator, JsonpMapper mapper) {
 
@@ -1041,7 +1090,8 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
 
     public static class Builder extends ObjectBuilderBase implements ObjectBuilder<TokenFilterDefinition> {
         private Kind _kind;
-        private TokenFilterDefinitionVariant _value;
+        private Object _value;
+        private String _customKind;
 
         public ObjectBuilder<TokenFilterDefinition> asciifolding(AsciiFoldingTokenFilter v) {
             this._kind = Kind.Asciifolding;
@@ -1597,6 +1647,22 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
             return this.smartcn_stop(fn.apply(new SmartcnStopTokenFilter.Builder()).build());
         }
 
+        /**
+         * Define this {@code TokenFilterDefinition} as a plugin-defined variant.
+         *
+         * @param name
+         *            the plugin-defined identifier
+         * @param data
+         *            the data for this custom {@code TokenFilterDefinition}. It is
+         *            converted internally to {@link JsonData}.
+         */
+        public ObjectBuilder<TokenFilterDefinition> _custom(String name, Object data) {
+            this._kind = Kind._Custom;
+            this._customKind = name;
+            this._value = JsonData.of(data);
+            return this;
+        }
+
         public TokenFilterDefinition build() {
             _checkSingleUse();
             return new TokenFilterDefinition(this);
@@ -1655,6 +1721,10 @@ public class TokenFilterDefinition implements TaggedUnion<TokenFilterDefinition.
         op.add(Builder::wordDelimiterGraph, WordDelimiterGraphTokenFilter._DESERIALIZER, "word_delimiter_graph");
         op.add(Builder::wordDelimiter, WordDelimiterTokenFilter._DESERIALIZER, "word_delimiter");
         op.add(Builder::smartcn_stop, SmartcnStopTokenFilter._DESERIALIZER, Kind.SmartcnStop.jsonValue());
+        op.setUnknownFieldHandler((builder, name, parser, mapper) -> {
+            JsonpUtils.ensureCustomVariantsAllowed(parser, mapper);
+            builder._custom(name, JsonData._DESERIALIZER.deserialize(parser, mapper));
+        });
 
         op.setTypeProperty("type", null);
 

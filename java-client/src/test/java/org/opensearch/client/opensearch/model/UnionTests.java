@@ -32,10 +32,19 @@
 
 package org.opensearch.client.opensearch.model;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.stream.JsonParser;
+
+import java.io.StringReader;
 import org.junit.Test;
 import org.opensearch.client.opensearch._types.Script;
+import org.opensearch.client.opensearch._types.aggregations.Aggregate;
+import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringFlag;
 import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringFlags;
+import org.opensearch.client.opensearch.core.SearchResponse;
 
 public class UnionTests extends ModelTestCase {
 
@@ -72,6 +81,74 @@ public class UnionTests extends ModelTestCase {
 
         f = fromJson("\"OR|AND\"", SimpleQueryStringFlags.class);
         assertEquals("OR|AND", f.multiple());
+
+    }
+
+    @Test
+    public void testOpenContainer() {
+        String json = "{\"foo\":{\"bar\":42}}";
+
+        JsonParser parser = Json.createParser(new StringReader("{ \"bar\": 42 }"));
+        parser.next();
+        JsonObject value = parser.getObject();
+
+        Query obj = Query.of(b -> b._custom("foo", value));
+        assertEquals(json, toJson(obj));
+
+        obj = checkJsonRoundtrip(obj, json);
+
+        assertEquals(Query.Kind._Custom, obj._kind());
+        assertEquals("foo", obj._customKind());
+        assertEquals(42, obj._custom().toJson().asJsonObject().getInt("bar"));
+    }
+
+    @Test
+    public void testOpenInternalUnion() {
+        String json = "{\"type\":\"foo\",\"bar\":42}";
+
+        JsonParser parser = Json.createParser(new StringReader(json));
+        parser.next();
+        JsonObject value = parser.getObject();
+
+        Property obj = Property.of(b -> b._custom("foo", value));
+        assertEquals(json, toJson(obj));
+
+        obj = checkJsonRoundtrip(obj, json);
+
+        assertEquals(Property.Kind._Custom, obj._kind());
+        assertEquals("foo", obj._customKind());
+        assertEquals(42, obj._custom().toJson().asJsonObject().getInt("bar"));
+    }
+
+    @Test
+    public void testOpenTypedKeysUnion() {
+        String requiredFields =
+            "{\"took\":1,\"timed_out\":false,\"_shards\":{\"failed\":0.0,\"successful\":1.0,\"total\":1.0}," +
+                "\"hits\":{\"total\":{\"relation\":\"eq\",\"value\":0},\"hits\":[]}}";
+
+        String customAgg = "{\"bar\":42}";
+
+        JsonParser parser = Json.createParser(new StringReader(customAgg));
+        parser.next();
+        JsonObject value = parser.getObject();
+
+        SearchResponse<Object> obj = SearchResponse.searchResponseOf(b -> b
+            .withJson(new StringReader(requiredFields))
+            .aggregations("custom-agg", a -> a._custom("foo", value))
+        );
+
+        String json = toJson(obj);
+        System.out.println(json);
+        assertTrue(json.contains("\"aggregations\":{\"foo#custom-agg\":{\"bar\":42}}"));
+
+        @SuppressWarnings("unchecked")
+        SearchResponse<Object> obj2 = fromJson(json, SearchResponse.class);
+
+        Aggregate aggregate = obj2.aggregations().get("custom-agg");
+        assertEquals(Aggregate.Kind._Custom, aggregate._kind());
+        assertEquals("foo", aggregate._customKind());
+        assertEquals(42, aggregate._custom().toJson().asJsonObject().getInt("bar"));
+
 
     }
 }

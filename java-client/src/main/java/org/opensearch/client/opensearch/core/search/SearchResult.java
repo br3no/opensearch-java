@@ -31,6 +31,7 @@ import org.opensearch.client.opensearch._types.aggregations.Aggregate;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.WithJsonObjectBuilderBase;
 
 //typedef: _global.search.SearchResult
 
@@ -319,7 +320,7 @@ public abstract class SearchResult<TDocument> implements JsonpSerializable {
     // ---------------------------------------------------------------------------------------------
 
     protected abstract static class AbstractBuilder<TDocument, BuilderT extends AbstractBuilder<TDocument, BuilderT>> extends
-        ObjectBuilderBase {
+        WithJsonObjectBuilderBase<BuilderT> {
         private Long took;
 
         private Boolean timedOut;

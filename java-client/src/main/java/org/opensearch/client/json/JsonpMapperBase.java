@@ -36,38 +36,105 @@ import jakarta.json.JsonValue;
 import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonParser;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 public abstract class JsonpMapperBase implements JsonpMapper {
 
     /** Get a serializer when none of the builtin ones are applicable */
-    protected abstract <T> JsonpDeserializer<T> getDefaultDeserializer(Class<T> clazz);
+    protected abstract <T> JsonpDeserializer<T> getDefaultDeserializer(Type type);
 
-    @Override
-    public <T> T deserialize(JsonParser parser, Class<T> clazz) {
-        JsonpDeserializer<T> deserializer = findDeserializer(clazz);
-        if (deserializer != null) {
-            return deserializer.deserialize(parser, this);
-        }
-
-        return getDefaultDeserializer(clazz).deserialize(parser, this);
-    }
+    private Map<String, Object> attributes;
 
     @Nullable
+    @Override
     @SuppressWarnings("unchecked")
+    public <T> T attribute(String name) {
+        return attributes == null ? null : (T) attributes.get(name);
+    }
+
+    /**
+     * Updates attributes to a copy of the current ones with an additional key/value pair.
+     *
+     * Mutates the current mapper, intended to be used in implementations of {@link #withAttribute(String, Object)}
+     */
+    protected JsonpMapperBase addAttribute(String name, Object value) {
+        if (attributes == null) {
+            this.attributes = Collections.singletonMap(name, value);
+        } else {
+            Map<String, Object> newAttrs = new HashMap<>(attributes.size() + 1);
+            newAttrs.putAll(attributes);
+            newAttrs.put(name, value);
+            this.attributes = newAttrs;
+        }
+        return this;
+    }
+
+    // ----- Deserialization
+
+    @Override
+    public <T> T deserialize(JsonParser parser, Type type) {
+        @SuppressWarnings("unchecked")
+        T result = (T) getDeserializer(type).deserialize(parser, this);
+        return result;
+    }
+
+    @Override
+    public <T> T deserialize(JsonParser parser, Type type, JsonParser.Event event) {
+        @SuppressWarnings("unchecked")
+        T result = (T) getDeserializer(type).deserialize(parser, this, event);
+        return result;
+    }
+
+    private <T> JsonpDeserializer<T> getDeserializer(Type type) {
+        JsonpDeserializer<T> deserializer = findDeserializer(type);
+        if (deserializer != null) {
+            return deserializer;
+        }
+
+        @SuppressWarnings("unchecked")
+        JsonpDeserializer<T> result = getDefaultDeserializer(type);
+        return result;
+    }
+
+    /**
+     * Find a built-in deserializer for a given class, if any.
+     */
+    @Nullable
     public static <T> JsonpDeserializer<T> findDeserializer(Class<T> clazz) {
-        JsonpDeserializable annotation = clazz.getAnnotation(JsonpDeserializable.class);
-        if (annotation != null) {
-            try {
-                Field field = clazz.getDeclaredField(annotation.field());
-                return (JsonpDeserializer<T>) field.get(null);
-            } catch (Exception e) {
-                throw new RuntimeException("No deserializer found in '" + clazz.getName() + "." + annotation.field() + "'");
+        return findDeserializer((Type) clazz);
+    }
+
+    /**
+     * Find a built-in deserializer for a given type, if any.
+     */
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public static <T> JsonpDeserializer<T> findDeserializer(Type type) {
+        if (type instanceof Class<?>) {
+            Class<?> clazz = (Class<?>) type;
+            JsonpDeserializable annotation = clazz.getAnnotation(JsonpDeserializable.class);
+            if (annotation != null) {
+                try {
+                    Field field = clazz.getDeclaredField(annotation.field());
+                    return (JsonpDeserializer<T>) field.get(null);
+                } catch (Exception e) {
+                    throw new RuntimeException("No deserializer found in '" + clazz.getName() + "." + annotation.field() + "'");
+                }
             }
+        }
+
+        if (type == Void.class) {
+            return (JsonpDeserializer<T>) JsonpDeserializerBase.VOID;
         }
 
         return null;
     }
+
+    // ----- Serialization
 
     @Nullable
     @SuppressWarnings("unchecked")

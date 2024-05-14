@@ -16,6 +16,7 @@ import java.util.List;
 import org.junit.Test;
 import org.opensearch.Version;
 import org.opensearch.client.opensearch._types.Refresh;
+import org.opensearch.client.opensearch._types.aggregations.Aggregate;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
 import org.opensearch.client.opensearch._types.aggregations.AggregationRange;
 import org.opensearch.client.opensearch._types.aggregations.DateRangeAggregation;
@@ -35,7 +36,7 @@ public abstract class AbstractAggregationRequestIT extends OpenSearchJavaClientT
         createDateRangeDocuments(index);
         var searchResponse = sendAggregateRequest(index, "cost_ranges", getCostValueRangeAggregation());
         var costRangesAggregations = searchResponse.aggregations().get("cost_ranges");
-        var buckets = costRangesAggregations._get()._toAggregate().range().buckets().array();
+        var buckets = ((Aggregate)costRangesAggregations._get()).range().buckets().array();
 
         assertEquals(3, buckets.size());
         assertEquals(2, buckets.get(0).docCount());
@@ -49,7 +50,7 @@ public abstract class AbstractAggregationRequestIT extends OpenSearchJavaClientT
         createDateRangeDocuments(index);
         var searchResponse = sendAggregateRequest(index, "expiry_ranges", getExpiryDateRangeAggregation());
         var expiryRangesAggregations = searchResponse.aggregations().get("expiry_ranges");
-        var buckets = expiryRangesAggregations._get()._toAggregate().dateRange().buckets().array();
+        var buckets = ((Aggregate)expiryRangesAggregations._get()).dateRange().buckets().array();
 
         assertEquals(3, buckets.size());
         assertEquals(2, buckets.get(0).docCount());
@@ -65,7 +66,7 @@ public abstract class AbstractAggregationRequestIT extends OpenSearchJavaClientT
         createMultiTermsDocuments(index);
         var searchResponse = sendAggregateRequest(index, "multiterms", getMultiTermsAggregation(null));
         var multitermsAggregations = searchResponse.aggregations().get("multiterms");
-        var buckets = multitermsAggregations._get()._toAggregate().multiTerms().buckets().array();
+        var buckets = ((Aggregate)multitermsAggregations._get()).multiTerms().buckets().array();
 
         assertEquals(3, buckets.size());
         assertEquals(1, buckets.get(0).docCount());
@@ -79,7 +80,7 @@ public abstract class AbstractAggregationRequestIT extends OpenSearchJavaClientT
         createMultiTermsDocuments(index);
         var searchResponse = sendAggregateRequest(index, "multiterms", getMultiTermsAggregation(1));
         var multitermsAggregations = searchResponse.aggregations().get("multiterms");
-        var buckets = multitermsAggregations._get()._toAggregate().multiTerms().buckets().array();
+        var buckets = ((Aggregate)multitermsAggregations._get()).multiTerms().buckets().array();
 
         assertEquals(1, buckets.size());
         assertEquals(1, buckets.get(0).docCount());
@@ -93,7 +94,7 @@ public abstract class AbstractAggregationRequestIT extends OpenSearchJavaClientT
         createMultiTermsDocuments(index);
         var searchResponse = sendAggregateRequest(index, "multiterms", getMultiTermsAggregation(50));
         var multitermsAggregations = searchResponse.aggregations().get("multiterms");
-        var buckets = multitermsAggregations._get()._toAggregate().multiTerms().buckets().array();
+        var buckets = ((Aggregate)multitermsAggregations._get()).multiTerms().buckets().array();
 
         assertEquals(3, buckets.size());
         assertEquals(1, buckets.get(0).docCount());

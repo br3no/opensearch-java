@@ -502,7 +502,7 @@ public abstract class AbstractRequestIT extends OpenSearchJavaClientTestCase {
         );
         SearchResponse<Product> searchResponse = javaClient().search(searchRequest, Product.class);
 
-        Aggregate prices = searchResponse.aggregations().get("price")._get()._toAggregate();
+        Aggregate prices = (Aggregate) searchResponse.aggregations().get("price")._get();
         assertEquals(2, searchResponse.aggregations().get("price").filter().docCount());
         assertEquals(1, prices.filter().aggregations().get("price").dterms().buckets().array().get(0).docCount());
         assertEquals(1, prices.filter().aggregations().get("price").dterms().buckets().array().get(1).docCount());

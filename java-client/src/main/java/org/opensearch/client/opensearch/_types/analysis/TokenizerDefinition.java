@@ -34,23 +34,27 @@ package org.opensearch.client.opensearch._types.analysis;
 
 import jakarta.json.stream.JsonGenerator;
 import java.util.function.Function;
+import org.opensearch.client.json.JsonData;
 import org.opensearch.client.json.JsonEnum;
 import org.opensearch.client.json.JsonpDeserializable;
 import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.JsonpUtils;
 import org.opensearch.client.json.ObjectBuilderDeserializer;
 import org.opensearch.client.json.ObjectDeserializer;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 import org.opensearch.client.util.TaggedUnionUtils;
+import javax.annotation.Nullable;
 
 // typedef: _types.analysis.TokenizerDefinition
 
 @JsonpDeserializable
-public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind, TokenizerDefinitionVariant>, JsonpSerializable {
+public class TokenizerDefinition implements OpenTaggedUnion<TokenizerDefinition.Kind, Object>, JsonpSerializable {
 
     /**
      * {@link TokenizerDefinition} variant kinds.
@@ -90,6 +94,8 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
 
         SmartcnTokenizer("smartcn_tokenizer"),
 
+        _Custom(null)
+
         ;
 
         private final String jsonValue;
@@ -105,7 +111,7 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
     }
 
     private final Kind _kind;
-    private final TokenizerDefinitionVariant _value;
+    private final Object _value;
 
     @Override
     public final Kind _kind() {
@@ -113,7 +119,7 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
     }
 
     @Override
-    public final TokenizerDefinitionVariant _get() {
+    public final Object _get() {
         return _value;
     }
 
@@ -121,6 +127,7 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
 
         this._kind = ApiTypeHelper.requireNonNull(value._tokenizerDefinitionKind(), this, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(value, this, "<variant value>");
+        this._customKind = null;
 
     }
 
@@ -128,12 +135,25 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
 
         this._kind = ApiTypeHelper.requireNonNull(builder._kind, builder, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(builder._value, builder, "<variant value>");
+        this._customKind = builder._customKind;
 
     }
 
     public static TokenizerDefinition of(Function<Builder, ObjectBuilder<TokenizerDefinition>> fn) {
         return fn.apply(new Builder()).build();
     }
+
+    /**
+     * Build a custom plugin-defined {@code TokenizerDefinition}, given its kind and
+     * some JSON data
+     */
+    public TokenizerDefinition(String kind, JsonData value) {
+        this._kind = Kind._Custom;
+        this._value = value;
+        this._customKind = kind;
+    }
+
+
 
     /**
      * Is this variant instance of kind {@code char_group}?
@@ -374,6 +394,35 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
         return TaggedUnionUtils.get(this, Kind.Whitespace);
     }
 
+    @Nullable
+    private final String _customKind;
+
+    /**
+     * Is this a custom {@code TokenizerDefinition} defined by a plugin?
+     */
+    public boolean _isCustom() {
+        return _kind == Kind._Custom;
+    }
+
+    /**
+     * Get the actual kind when {@code _kind()} equals {@link Kind#_Custom}
+     * (plugin-defined variant).
+     */
+    @Nullable
+    public final String _customKind() {
+        return _customKind;
+    }
+
+    /**
+     * Get the custom plugin-defined variant value.
+     *
+     * @throws IllegalStateException
+     *             if the current variant is not {@link Kind#_Custom}.
+     */
+    public JsonData _custom() {
+        return TaggedUnionUtils.get(this, Kind._Custom);
+    }
+
     @Override
     public void serialize(JsonGenerator generator, JsonpMapper mapper) {
 
@@ -383,7 +432,8 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
 
     public static class Builder extends ObjectBuilderBase implements ObjectBuilder<TokenizerDefinition> {
         private Kind _kind;
-        private TokenizerDefinitionVariant _value;
+        private Object _value;
+        private String _customKind;
 
         public ObjectBuilder<TokenizerDefinition> charGroup(CharGroupTokenizer v) {
             this._kind = Kind.CharGroup;
@@ -541,6 +591,22 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
             return this.smartcn(fn.apply(new SmartcnTokenizer.Builder()).build());
         }
 
+        /**
+         * Define this {@code TokenizerDefinition} as a plugin-defined variant.
+         *
+         * @param name
+         *            the plugin-defined identifier
+         * @param data
+         *            the data for this custom {@code TokenizerDefinition}. It is
+         *            converted internally to {@link JsonData}.
+         */
+        public ObjectBuilder<TokenizerDefinition> _custom(String name, Object data) {
+            this._kind = Kind._Custom;
+            this._customKind = name;
+            this._value = JsonData.of(data);
+            return this;
+        }
+
         public TokenizerDefinition build() {
             _checkSingleUse();
             return new TokenizerDefinition(this);
@@ -565,6 +631,10 @@ public class TokenizerDefinition implements TaggedUnion<TokenizerDefinition.Kind
         op.add(Builder::uaxUrlEmail, UaxEmailUrlTokenizer._DESERIALIZER, "uax_url_email");
         op.add(Builder::whitespace, WhitespaceTokenizer._DESERIALIZER, "whitespace");
         op.add(Builder::smartcn, SmartcnTokenizer._DESERIALIZER, Kind.SmartcnTokenizer.jsonValue());
+        op.setUnknownFieldHandler((builder, name, parser, mapper) -> {
+            JsonpUtils.ensureCustomVariantsAllowed(parser, mapper);
+            builder._custom(name, JsonData._DESERIALIZER.deserialize(parser, mapper));
+        });
 
         op.setTypeProperty("type", null);
 

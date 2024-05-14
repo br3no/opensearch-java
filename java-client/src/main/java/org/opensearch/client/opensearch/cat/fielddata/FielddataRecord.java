@@ -43,6 +43,7 @@ import org.opensearch.client.json.ObjectBuilderDeserializer;
 import org.opensearch.client.json.ObjectDeserializer;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.WithJsonObjectBuilderBase;
 
 // typedef: cat.fielddata.FielddataRecord
 
@@ -193,7 +194,7 @@ public class FielddataRecord implements JsonpSerializable {
      * Builder for {@link FielddataRecord}.
      */
 
-    public static class Builder extends ObjectBuilderBase implements ObjectBuilder<FielddataRecord> {
+	public static class Builder extends WithJsonObjectBuilderBase<Builder> implements ObjectBuilder<FielddataRecord> {
         @Nullable
         private String id;
 
@@ -271,6 +272,11 @@ public class FielddataRecord implements JsonpSerializable {
             this.size = value;
             return this;
         }
+
+		@Override
+		protected Builder self() {
+			return this;
+		}
 
         /**
          * Builds a {@link FielddataRecord}.

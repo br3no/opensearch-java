@@ -35,6 +35,8 @@ package org.opensearch.client.json;
 import jakarta.json.spi.JsonProvider;
 import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonParser;
+import jakarta.json.stream.JsonParser.Event;
+import java.lang.reflect.Type;
 
 class AttributedJsonpMapper implements JsonpMapper {
 
@@ -56,6 +58,16 @@ class AttributedJsonpMapper implements JsonpMapper {
     @Override
     public <T> T deserialize(JsonParser parser, Class<T> clazz) {
         return mapper.deserialize(parser, clazz);
+    }
+
+    @Override
+    public <T> T deserialize(JsonParser parser, Type type) {
+        return mapper.deserialize(parser, type);
+    }
+
+    @Override
+    public <T> T deserialize(JsonParser parser, Type type, Event event) {
+        return mapper.deserialize(parser, type, event);
     }
 
     @Override

@@ -36,6 +36,7 @@ import jakarta.json.stream.JsonGenerator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.opensearch.client.json.ExternallyTaggedUnion;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.json.JsonEnum;
@@ -45,12 +46,13 @@ import org.opensearch.client.json.JsonpSerializable;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 import org.opensearch.client.util.TaggedUnionUtils;
 
 // typedef: _types.aggregations.Aggregate
 
-public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>, JsonpSerializable {
+public class Aggregate implements OpenTaggedUnion<Aggregate.Kind, Object>, JsonpSerializable {
 
     /**
      * {@link Aggregate} variant kinds.
@@ -205,7 +207,7 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
     }
 
     private final Kind _kind;
-    private final AggregateVariant _value;
+    private final Object _value;
 
     @Override
     public final Kind _kind() {
@@ -213,7 +215,7 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
     }
 
     @Override
-    public final AggregateVariant _get() {
+    public final Object _get() {
         return _value;
     }
 
@@ -221,6 +223,7 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
 
         this._kind = ApiTypeHelper.requireNonNull(value._aggregateKind(), this, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(value, this, "<variant value>");
+        this._customKind = null;
 
     }
 
@@ -228,16 +231,22 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
 
         this._kind = ApiTypeHelper.requireNonNull(builder._kind, builder, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(builder._value, builder, "<variant value>");
+        this._customKind = builder._customKind;
 
-    }
-
-    public Aggregate(String kind, JsonData value) {
-        this._kind = Kind._Custom;
-        this._value = (AggregateVariant) value;
     }
 
     public static Aggregate of(Function<Builder, ObjectBuilder<Aggregate>> fn) {
         return fn.apply(new Builder()).build();
+    }
+
+    /**
+     * Build a custom plugin-defined {@code Aggregate}, given its kind and some JSON
+     * data
+     */
+    public Aggregate(String kind, JsonData value) {
+        this._kind = Kind._Custom;
+        this._value = value;
+        this._customKind = kind;
     }
 
     /**
@@ -1341,6 +1350,35 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
         return TaggedUnionUtils.get(this, Kind.WeightedAvg);
     }
 
+    @Nullable
+    private final String _customKind;
+
+    /**
+     * Is this a custom {@code Aggregate} defined by a plugin?
+     */
+    public boolean _isCustom() {
+        return _kind == Kind._Custom;
+    }
+
+    /**
+     * Get the actual kind when {@code _kind()} equals {@link Kind#_Custom}
+     * (plugin-defined variant).
+     */
+    @Nullable
+    public final String _customKind() {
+        return _customKind;
+    }
+
+    /**
+     * Get the custom plugin-defined variant value.
+     *
+     * @throws IllegalStateException
+     *             if the current variant is not {@link Kind#_Custom}.
+     */
+    public JsonData _custom() {
+        return TaggedUnionUtils.get(this, Kind._Custom);
+    }
+
     @Override
     public void serialize(JsonGenerator generator, JsonpMapper mapper) {
 
@@ -1350,7 +1388,8 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
 
     public static class Builder extends ObjectBuilderBase implements ObjectBuilder<Aggregate> {
         private Kind _kind;
-        private AggregateVariant _value;
+        private Object _value;
+        private String _customKind;
 
         public ObjectBuilder<Aggregate> adjacencyMatrix(AdjacencyMatrixAggregate v) {
             this._kind = Kind.AdjacencyMatrix;
@@ -2026,6 +2065,22 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
             return this.weightedAvg(fn.apply(new WeightedAvgAggregate.Builder()).build());
         }
 
+        /**
+         * Define this {@code Aggregate} as a plugin-defined variant.
+         *
+         * @param name
+         *            the plugin-defined identifier
+         * @param data
+         *            the data for this custom {@code Aggregate}. It is converted
+         *            internally to {@link JsonData}.
+         */
+        public ObjectBuilder<Aggregate> _custom(String name, Object data) {
+            this._kind = Kind._Custom;
+            this._customKind = name;
+            this._value = JsonData.of(data);
+            return this;
+        }
+
         public Aggregate build() {
             _checkSingleUse();
             return new Aggregate(this);
@@ -2102,6 +2157,7 @@ public class Aggregate implements TaggedUnion<Aggregate.Kind, AggregateVariant>,
         deserializers.put("variable_width_histogram", VariableWidthHistogramAggregate._DESERIALIZER);
         deserializers.put("weighted_avg", WeightedAvgAggregate._DESERIALIZER);
 
-        _TYPED_KEYS_DESERIALIZER = new ExternallyTaggedUnion.Deserializer<>(deserializers, Aggregate::new, Aggregate::new).typedKeys();
+        _TYPED_KEYS_DESERIALIZER = new ExternallyTaggedUnion.Deserializer<>(deserializers, Aggregate::new,
+            Aggregate::new).typedKeys();
     }
 }

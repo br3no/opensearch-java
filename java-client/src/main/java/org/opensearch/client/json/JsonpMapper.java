@@ -35,6 +35,8 @@ package org.opensearch.client.json;
 import jakarta.json.spi.JsonProvider;
 import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonParser;
+import java.lang.reflect.Type;
+import javax.annotation.Nullable;
 
 /**
  * A {@code JsonpMapper} combines a JSON-P provider and object serialization/deserialization based on JSON-P events.
@@ -55,7 +57,26 @@ public interface JsonpMapper {
     /**
      * Deserialize an object, given its class.
      */
-    <T> T deserialize(JsonParser parser, Class<T> clazz);
+    default <T> T deserialize(JsonParser parser, Class<T> clazz) {
+        return deserialize(parser, (Type) clazz);
+    }
+
+    /**
+     * Deserialize an object, given its type.
+     */
+    <T> T deserialize(JsonParser parser, Type type);
+
+    /**
+     * Deserialize an object, given its class and the current event the parser is at.
+     */
+    default <T> T deserialize(JsonParser parser, Class<T> clazz, JsonParser.Event event) {
+        return deserialize(parser, (Type) clazz, event);
+    }
+
+    /**
+     * Deserialize an object, given its type and the current event the parser is at.
+     */
+    <T> T deserialize(JsonParser parser, Type type, JsonParser.Event event);
 
     /**
      * Serialize an object.
@@ -74,6 +95,7 @@ public interface JsonpMapper {
     /**
      * Get a named attribute associated to this mapper.
      */
+    @Nullable
     default <T> T attribute(String name) {
         return null;
     }

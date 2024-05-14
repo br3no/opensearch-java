@@ -39,6 +39,7 @@ import org.opensearch.client.json.JsonpDeserializable;
 import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.opensearch.cat.CountResponse.Builder;
 import org.opensearch.client.opensearch.cat.fielddata.FielddataRecord;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
@@ -149,7 +150,8 @@ public class FielddataResponse implements JsonpSerializable {
 
         return JsonpDeserializer.of(
             valueDeserializer.acceptedEvents(),
-            (parser, mapper) -> new Builder().valueBody(valueDeserializer.deserialize(parser, mapper)).build()
+            (parser, mapper, event) -> new Builder()
+                .valueBody(valueDeserializer.deserialize(parser, mapper, event)).build()
         );
     }
 

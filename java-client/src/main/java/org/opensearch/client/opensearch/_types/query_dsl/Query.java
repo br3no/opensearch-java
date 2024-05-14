@@ -34,11 +34,14 @@ package org.opensearch.client.opensearch._types.query_dsl;
 
 import jakarta.json.stream.JsonGenerator;
 import java.util.function.Function;
+import javax.annotation.Nullable;
+import org.opensearch.client.json.JsonData;
 import org.opensearch.client.json.JsonEnum;
 import org.opensearch.client.json.JsonpDeserializable;
 import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.JsonpUtils;
 import org.opensearch.client.json.ObjectBuilderDeserializer;
 import org.opensearch.client.json.ObjectDeserializer;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
@@ -46,13 +49,14 @@ import org.opensearch.client.opensearch._types.aggregations.AggregationVariant;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 import org.opensearch.client.util.TaggedUnionUtils;
 
 // typedef: _types.query_dsl.QueryContainer
 
 @JsonpDeserializable
-public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVariant, JsonpSerializable {
+public class Query implements OpenTaggedUnion<Query.Kind, Object>, AggregationVariant, JsonpSerializable {
 
     /**
      * {@link Query} variant kinds.
@@ -176,6 +180,9 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
 
         Type("type"),
 
+        /** A custom {@code Query} defined by a plugin */
+        _Custom(null)
+
         ;
 
         private final String jsonValue;
@@ -215,6 +222,7 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
 
         this._kind = ApiTypeHelper.requireNonNull(value._queryKind(), this, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(value, this, "<variant value>");
+        this._customKind = null;
 
     }
 
@@ -222,6 +230,7 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
 
         this._kind = ApiTypeHelper.requireNonNull(builder._kind, builder, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(builder._value, builder, "<variant value>");
+        this._customKind = builder._customKind;
 
     }
 
@@ -1206,13 +1215,44 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
         return TaggedUnionUtils.get(this, Kind.Type);
     }
 
+
+    @Nullable
+    private final String _customKind;
+
+    /**
+     * Is this a custom {@code Query} defined by a plugin?
+     */
+    public boolean _isCustom() {
+        return _kind == Kind._Custom;
+    }
+
+    /**
+     * Get the actual kind when {@code _kind()} equals {@link Kind#_Custom}
+     * (plugin-defined variant).
+     */
+    @Nullable
+    public final String _customKind() {
+        return _customKind;
+    }
+
+    /**
+     * Get the custom plugin-defined variant value.
+     *
+     * @throws IllegalStateException
+     *             if the current variant is not {@link Kind#_Custom}.
+     */
+    public JsonData _custom() {
+        return TaggedUnionUtils.get(this, Kind._Custom);
+    }
+
+
     @Override
     @SuppressWarnings("unchecked")
     public void serialize(JsonGenerator generator, JsonpMapper mapper) {
 
         generator.writeStartObject();
 
-        generator.writeKey(_kind.jsonValue());
+        generator.writeKey(_kind == Kind._Custom ? _customKind : _kind.jsonValue());
         if (_value instanceof JsonpSerializable) {
             ((JsonpSerializable) _value).serialize(generator, mapper);
         }
@@ -1228,6 +1268,7 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
     public static class Builder extends ObjectBuilderBase implements ObjectBuilder<Query> {
         private Kind _kind;
         private Object _value;
+        private String _customKind;
 
         protected final Builder _kind(Kind v) {
             this._kind = v;
@@ -1799,6 +1840,22 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
             return this.type(fn.apply(new TypeQuery.Builder()).build());
         }
 
+        /**
+         * Define this {@code Query} as a plugin-defined variant.
+         *
+         * @param name
+         *            the plugin-defined identifier
+         * @param data
+         *            the data for this custom {@code Query}. It is converted internally
+         *            to {@link JsonData}.
+         */
+        public ObjectBuilder<Query> _custom(String name, Object data) {
+            this._kind = Kind._Custom;
+            this._customKind = name;
+            this._value = JsonData.of(data);
+            return this;
+        }
+
         public Query build() {
             _checkSingleUse();
             return new Query(this);
@@ -1863,7 +1920,10 @@ public class Query implements TaggedUnion<Query.Kind, Object>, AggregationVarian
         op.add(Builder::termsSet, TermsSetQuery._DESERIALIZER, "terms_set");
         op.add(Builder::wildcard, WildcardQuery._DESERIALIZER, "wildcard");
         op.add(Builder::type, TypeQuery._DESERIALIZER, "type");
-
+        op.setUnknownFieldHandler((builder, name, parser, mapper) -> {
+            JsonpUtils.ensureCustomVariantsAllowed(parser, mapper);
+            builder._custom(name, JsonData._DESERIALIZER.deserialize(parser, mapper));
+        });
     }
 
     public static final JsonpDeserializer<Query> _DESERIALIZER = ObjectBuilderDeserializer.lazy(

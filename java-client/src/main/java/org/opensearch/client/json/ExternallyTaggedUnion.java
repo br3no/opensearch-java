@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 
 /**
@@ -190,8 +191,22 @@ public class ExternallyTaggedUnion {
     ) {
         for (Map.Entry<String, T> entry : map.entrySet()) {
             T value = entry.getValue();
-            generator.writeKey(value._kind().jsonValue() + "#" + entry.getKey());
+            generator.writeKey(getKind(value) + "#" + entry.getKey());
             value.serialize(generator, mapper);
         }
+    }
+
+    private static <T extends JsonpSerializable & TaggedUnion<? extends JsonEnum, ?>> String getKind(T value) {
+        String kind;
+        if (value instanceof OpenTaggedUnion) {
+            // Use custom kind if defined, and fall back to regular kind
+            kind = ((OpenTaggedUnion<?,?>)value)._customKind();
+            if (kind == null) {
+                kind = value._kind().jsonValue();
+            }
+        } else {
+                kind = value._kind().jsonValue();
+        }
+        return kind;
     }
 }

@@ -34,23 +34,27 @@ package org.opensearch.client.opensearch._types.mapping;
 
 import jakarta.json.stream.JsonGenerator;
 import java.util.function.Function;
+import javax.annotation.Nullable;
+import org.opensearch.client.json.JsonData;
 import org.opensearch.client.json.JsonEnum;
 import org.opensearch.client.json.JsonpDeserializable;
 import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.JsonpUtils;
 import org.opensearch.client.json.ObjectBuilderDeserializer;
 import org.opensearch.client.json.ObjectDeserializer;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 import org.opensearch.client.util.TaggedUnionUtils;
 
 // typedef: _types.mapping.Property
 
 @JsonpDeserializable
-public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, JsonpSerializable {
+public class Property implements OpenTaggedUnion<Property.Kind, Object>, JsonpSerializable {
 
     /**
      * {@link Property} variant kinds.
@@ -150,6 +154,8 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
 
         Wildcard("wildcard"),
 
+        _Custom(null)
+
         ;
 
         private final String jsonValue;
@@ -165,7 +171,7 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
     }
 
     private final Kind _kind;
-    private final PropertyVariant _value;
+    private final Object _value;
 
     @Override
     public final Kind _kind() {
@@ -173,7 +179,7 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
     }
 
     @Override
-    public final PropertyVariant _get() {
+    public final Object _get() {
         return _value;
     }
 
@@ -181,6 +187,7 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
 
         this._kind = ApiTypeHelper.requireNonNull(value._propertyKind(), this, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(value, this, "<variant value>");
+        this._customKind = null;
 
     }
 
@@ -188,11 +195,22 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
 
         this._kind = ApiTypeHelper.requireNonNull(builder._kind, builder, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(builder._value, builder, "<variant value>");
+        this._customKind = builder._customKind;
 
     }
 
     public static Property of(Function<Builder, ObjectBuilder<Property>> fn) {
         return fn.apply(new Builder()).build();
+    }
+
+    /**
+     * Build a custom plugin-defined {@code Property}, given its kind and some JSON
+     * data
+     */
+    public Property(String kind, JsonData value) {
+        this._kind = Kind._Custom;
+        this._value = value;
+        this._customKind = kind;
     }
 
     /**
@@ -963,6 +981,37 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
         return TaggedUnionUtils.get(this, Kind.Wildcard);
     }
 
+    @Nullable
+    private final String _customKind;
+
+    /**
+     * Is this a custom {@code Property} defined by a plugin?
+     */
+    public boolean _isCustom() {
+        return _kind == Kind._Custom;
+    }
+
+    /**
+     * Get the actual kind when {@code _kind()} equals {@link Kind#_Custom}
+     * (plugin-defined variant).
+     */
+    @Nullable
+    public final String _customKind() {
+        return _customKind;
+    }
+
+    /**
+     * Get the custom plugin-defined variant value.
+     *
+     * @throws IllegalStateException
+     *             if the current variant is not {@link Kind#_Custom}.
+     */
+    public JsonData _custom() {
+        return TaggedUnionUtils.get(this, Kind._Custom);
+    }
+
+
+
     @Override
     public void serialize(JsonGenerator generator, JsonpMapper mapper) {
 
@@ -972,7 +1021,8 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
 
     public static class Builder extends ObjectBuilderBase implements ObjectBuilder<Property> {
         private Kind _kind;
-        private PropertyVariant _value;
+        private Object _value;
+        private String _customKind;
 
         public ObjectBuilder<Property> aggregateMetricDouble(AggregateMetricDoubleProperty v) {
             this._kind = Kind.AggregateMetricDouble;
@@ -1436,6 +1486,22 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
             return this.wildcard(fn.apply(new WildcardProperty.Builder()).build());
         }
 
+        /**
+         * Define this {@code Property} as a plugin-defined variant.
+         *
+         * @param name
+         *            the plugin-defined identifier
+         * @param data
+         *            the data for this custom {@code Property}. It is converted
+         *            internally to {@link JsonData}.
+         */
+        public ObjectBuilder<Property> _custom(String name, Object data) {
+            this._kind = Kind._Custom;
+            this._customKind = name;
+            this._value = JsonData.of(data);
+            return this;
+        }
+
         public Property build() {
             _checkSingleUse();
             return new Property(this);
@@ -1490,6 +1556,10 @@ public class Property implements TaggedUnion<Property.Kind, PropertyVariant>, Js
         op.add(Builder::unsignedLong, UnsignedLongNumberProperty._DESERIALIZER, "unsigned_long");
         op.add(Builder::version, VersionProperty._DESERIALIZER, "version");
         op.add(Builder::wildcard, WildcardProperty._DESERIALIZER, "wildcard");
+        op.setUnknownFieldHandler((builder, name, parser, mapper) -> {
+            JsonpUtils.ensureCustomVariantsAllowed(parser, mapper);
+            builder._custom(name, JsonData._DESERIALIZER.deserialize(parser, mapper));
+        });
 
         op.setTypeProperty("type", "object");
 

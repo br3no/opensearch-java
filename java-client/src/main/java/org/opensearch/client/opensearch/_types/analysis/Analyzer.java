@@ -34,23 +34,28 @@ package org.opensearch.client.opensearch._types.analysis;
 
 import jakarta.json.stream.JsonGenerator;
 import java.util.function.Function;
+import javax.annotation.Nullable;
+import org.opensearch.client.json.JsonData;
 import org.opensearch.client.json.JsonEnum;
 import org.opensearch.client.json.JsonpDeserializable;
 import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.JsonpUtils;
 import org.opensearch.client.json.ObjectBuilderDeserializer;
 import org.opensearch.client.json.ObjectDeserializer;
+import org.opensearch.client.opensearch._types.analysis.Analyzer.Kind;
 import org.opensearch.client.util.ApiTypeHelper;
 import org.opensearch.client.util.ObjectBuilder;
 import org.opensearch.client.util.ObjectBuilderBase;
+import org.opensearch.client.util.OpenTaggedUnion;
 import org.opensearch.client.util.TaggedUnion;
 import org.opensearch.client.util.TaggedUnionUtils;
 
 // typedef: _types.analysis.Analyzer
 
 @JsonpDeserializable
-public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, JsonpSerializable {
+public class Analyzer implements OpenTaggedUnion<Kind, Object>, JsonpSerializable {
 
     /**
      * {@link Analyzer} variant kinds.
@@ -92,6 +97,8 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
 
         Cjk("cjk"),
 
+        _Custom(null)
+
         ;
 
         private final String jsonValue;
@@ -107,7 +114,7 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
     }
 
     private final Kind _kind;
-    private final AnalyzerVariant _value;
+    private final Object _value;
 
     @Override
     public final Kind _kind() {
@@ -115,7 +122,7 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
     }
 
     @Override
-    public final AnalyzerVariant _get() {
+    public final Object _get() {
         return _value;
     }
 
@@ -123,6 +130,7 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
 
         this._kind = ApiTypeHelper.requireNonNull(value._analyzerKind(), this, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(value, this, "<variant value>");
+        this._customKind = null;
 
     }
 
@@ -130,11 +138,22 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
 
         this._kind = ApiTypeHelper.requireNonNull(builder._kind, builder, "<variant kind>");
         this._value = ApiTypeHelper.requireNonNull(builder._value, builder, "<variant value>");
+        this._customKind = builder._customKind;
 
     }
 
     public static Analyzer of(Function<Builder, ObjectBuilder<Analyzer>> fn) {
         return fn.apply(new Builder()).build();
+    }
+
+    /**
+     * Build a custom plugin-defined {@code Analyzer}, given its kind and some JSON
+     * data
+     */
+    public Analyzer(String kind, JsonData value) {
+        this._kind = Kind._Custom;
+        this._value = value;
+        this._customKind = kind;
     }
 
     /**
@@ -409,6 +428,37 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
         return TaggedUnionUtils.get(this, Kind.Cjk);
     }
 
+    @Nullable
+    private final String _customKind;
+
+    /**
+     * Is this a custom {@code Analyzer} defined by a plugin?
+     */
+    public boolean _isCustom() {
+        return _kind == Kind._Custom;
+    }
+
+    /**
+     * Get the actual kind when {@code _kind()} equals {@link Kind#_Custom}
+     * (plugin-defined variant).
+     */
+    @Nullable
+    public final String _customKind() {
+        return _customKind;
+    }
+
+    /**
+     * Get the custom plugin-defined variant value.
+     *
+     * @throws IllegalStateException
+     *             if the current variant is not {@link Kind#_Custom}.
+     */
+    public JsonData _custom() {
+        return TaggedUnionUtils.get(this, Kind._Custom);
+    }
+
+
+
     @Override
     public void serialize(JsonGenerator generator, JsonpMapper mapper) {
 
@@ -418,7 +468,8 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
 
     public static class Builder extends ObjectBuilderBase implements ObjectBuilder<Analyzer> {
         private Kind _kind;
-        private AnalyzerVariant _value;
+        private Object _value;
+        private String _customKind;
 
         public ObjectBuilder<Analyzer> custom(CustomAnalyzer v) {
             this._kind = Kind.Custom;
@@ -580,6 +631,22 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
             return this.cjk(fn.apply(new CjkAnalyzer.Builder()).build());
         }
 
+        /**
+         * Define this {@code Analyzer} as a plugin-defined variant.
+         *
+         * @param name
+         *            the plugin-defined identifier
+         * @param data
+         *            the data for this custom {@code Analyzer}. It is converted
+         *            internally to {@link JsonData}.
+         */
+        public ObjectBuilder<Analyzer> _custom(String name, Object data) {
+            this._kind = Kind._Custom;
+            this._customKind = name;
+            this._value = JsonData.of(data);
+            return this;
+        }
+
         public Analyzer build() {
             _checkSingleUse();
             return new Analyzer(this);
@@ -605,6 +672,10 @@ public class Analyzer implements TaggedUnion<Analyzer.Kind, AnalyzerVariant>, Js
         op.add(Builder::whitespace, WhitespaceAnalyzer._DESERIALIZER, "whitespace");
         op.add(Builder::smartcn, SmartcnAnalyzer._DESERIALIZER, Kind.Smartcn.jsonValue());
         op.add(Builder::cjk, CjkAnalyzer._DESERIALIZER, Kind.Cjk.jsonValue());
+        op.setUnknownFieldHandler((builder, name, parser, mapper) -> {
+            JsonpUtils.ensureCustomVariantsAllowed(parser, mapper);
+            builder._custom(name, JsonData._DESERIALIZER.deserialize(parser, mapper));
+        });
 
         op.setTypeProperty("type", null);
 

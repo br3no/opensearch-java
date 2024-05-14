@@ -439,7 +439,8 @@ public class CreateRequest<TDocument> extends RequestBase implements JsonpSerial
 
         return JsonpDeserializer.of(
             valueDeserializer.acceptedEvents(),
-            (parser, mapper) -> new Builder<TDocument>().document(valueDeserializer.deserialize(parser, mapper)).build()
+            (parser, mapper, event) -> new Builder<TDocument>()
+                .document(valueDeserializer.deserialize(parser, mapper, event)).build()
         );
     }
 
